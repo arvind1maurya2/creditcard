@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101827">
+  <title>My Cards — Private Wallet</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    :root { --ink:#172033; --muted:#778198; --line:#e8ebf2; --bg:#f4f6fb; }
+    body { background:var(--bg); color:var(--ink); font-family:system-ui,-apple-system,"Segoe UI",sans-serif; }
+    .shell { max-width:1120px; }
+    .topbar { background:#101827; color:white; }
+    .brand-mark { width:42px;height:42px;border-radius:14px;background:#29364d;display:grid;place-items:center; }
+    .panel { background:white;border:1px solid var(--line);border-radius:20px;box-shadow:0 8px 28px rgba(25,38,65,.045); }
+    .wallet-card { color:white; min-height:0; aspect-ratio:1.58/1; border-radius:20px; padding:20px; position:relative; overflow:hidden; --c1:#1c2a46; --c2:#465c83; background:linear-gradient(135deg,var(--c1),var(--c2)); }
+    .wallet-card.sunset { --c1:#8a2c0f; --c2:#d9772b; }
+    .wallet-card.royal { --c1:#1b2a6b; --c2:#4a63c9; }
+    .wallet-card.emerald { --c1:#0d4d3c; --c2:#1f9a74; }
+    .wallet-card.crimson { --c1:#6b0f22; --c2:#c0344d; }
+    .wallet-card.plum { --c1:#3e1756; --c2:#8a3fb0; }
+    .wallet-card.teal { --c1:#0b4652; --c2:#1b8fa3; }
+    .wallet-card.bronze { --c1:#2b2620; --c2:#8a6d3b; }
+    .wallet-card.rose { --c1:#6d1e4a; --c2:#c24b85; }
+    .wallet-card.olive { --c1:#2f4012; --c2:#6f8f2a; }
+    .wallet-card.indigo { --c1:#191c4a; --c2:#4b3f9e; }
+    /* Background shapes: sizes are % of the card so they scale down on mobile */
+    .wallet-card::before,.wallet-card::after { content:"";position:absolute;border-radius:50%;pointer-events:none;z-index:0; }
+    /* Pattern 1: concentric rings top-right + soft glow bottom-left */
+    .wallet-card.p1::after { width:78%;aspect-ratio:1;right:-26%;top:-48%;background:repeating-radial-gradient(circle,transparent 0 13%,rgba(255,255,255,.11) 13% 14.2%); }
+    .wallet-card.p1::before { width:58%;aspect-ratio:1;left:-20%;bottom:-55%;background:radial-gradient(circle,rgba(255,255,255,.16),transparent 68%); }
+    /* Pattern 2: layered waves along the bottom */
+    .wallet-card.p2::before { width:175%;height:120%;left:-40%;top:52%;background:rgba(255,255,255,.08); }
+    .wallet-card.p2::after { width:175%;height:120%;left:-5%;top:70%;background:rgba(0,0,0,.15); }
+    /* Pattern 3: floating bubbles */
+    .wallet-card.p3 { background:radial-gradient(circle at 14% 82%,rgba(255,255,255,.12) 0 5%,transparent 5.5%),radial-gradient(circle at 62% 30%,rgba(255,255,255,.07) 0 3%,transparent 3.5%),linear-gradient(135deg,var(--c1),var(--c2)); }
+    .wallet-card.p3::before { width:50%;aspect-ratio:1;right:-12%;bottom:-38%;background:rgba(255,255,255,.10); }
+    .wallet-card.p3::after { width:24%;aspect-ratio:1;right:30%;top:-10%;border:2px solid rgba(255,255,255,.15); }
+    /* Pattern 4: sweeping arcs from the left */
+    .wallet-card.p4::before { width:130%;aspect-ratio:1;left:-78%;top:-70%;border:clamp(10px,4vw,28px) solid rgba(255,255,255,.07); }
+    .wallet-card.p4::after { width:130%;aspect-ratio:1;left:-62%;top:-45%;border:1px solid rgba(255,255,255,.2); }
+    /* Pattern 5: orbit rings bottom-right */
+    .wallet-card.p5::before { width:92%;aspect-ratio:1;right:-42%;bottom:-110%;border:1px solid rgba(255,255,255,.18);box-shadow:inset 0 0 0 clamp(8px,3vw,20px) rgba(255,255,255,.05); }
+    .wallet-card.p5::after { width:58%;aspect-ratio:1;right:-25%;bottom:-62%;border:1px solid rgba(255,255,255,.12);background:radial-gradient(circle,rgba(255,255,255,.1),transparent 70%); }
+    .card-content { position:relative;z-index:1;width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto 1fr auto;column-gap:10px;row-gap:6px; }
+    .wallet-card { display:flex; }
+    .card-title-block { grid-column:1;grid-row:1;min-width:0; }
+    .number-row { grid-column:1 / -1;grid-row:2;align-self:center;display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0; }
+    .number-row .copy-btn { flex-shrink:0; }
+    .card-holder { grid-column:1;grid-row:3;align-self:end;min-width:0; }
+    .card-expiry { grid-column:2;grid-row:3;align-self:end; }
+    .wallet-card .cvv-box { grid-column:2;grid-row:1;align-self:start;justify-content:space-between; }
+    .muted-light { color:rgba(255,255,255,.7);font-size:.72rem;letter-spacing:.09em;text-transform:uppercase; }
+    /* Card number always stays on one line */
+    .card-number { margin:0;white-space:nowrap;font-variant-numeric:tabular-nums;letter-spacing:.13em;font-size:1.05rem;font-weight:600; }
+    .form-control,.form-select { border-color:#e2e6ef;border-radius:11px;padding:.72rem .85rem; }
+    .form-control:focus,.form-select:focus { border-color:#8298c5;box-shadow:0 0 0 .2rem rgba(74,104,164,.12); }
+    .btn { border-radius:11px;padding:.65rem 1rem; }
+    .pin-screen { min-height:100vh;display:grid;place-items:center;padding:22px;background:radial-gradient(circle at 20% 10%,#273b5d,#101827 55%); }
+    .pin-card { width:min(100%,420px);border-radius:24px;padding:32px;background:white;box-shadow:0 24px 80px rgba(0,0,0,.25); }
+    .pin-dot { letter-spacing:.45em;text-align:center;font-size:1.4rem; }
+    .pin-dot.is-wrong { border-color:#dc3545;animation:shake .35s; }
+    @keyframes shake { 25%{transform:translateX(-6px)} 50%{transform:translateX(6px)} 75%{transform:translateX(-3px)} }
+    @media (prefers-reduced-motion:reduce){ .pin-dot.is-wrong{animation:none} }
+    .empty { border:1px dashed #cbd2df;border-radius:18px;padding:42px 18px;text-align:center;color:var(--muted); }
+    .cvv-box { cursor:pointer;transition:background .15s;display:flex;align-items:center;gap:6px;flex-shrink:0;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:3px 4px 3px 9px; }
+    .cvv-value { font-weight:600;font-size:.9rem;letter-spacing:.12em;min-width:3.2ch;font-variant-numeric:tabular-nums; }
+    .cvv-toggle { background:transparent;border:0;color:white;padding:2px 6px;border-radius:7px;line-height:1;cursor:pointer; }
+    .cvv-box:hover { background:rgba(255,255,255,.2); }
+    .cvv-toggle:focus-visible { outline:2px solid white;outline-offset:1px; }
+        .copy-btn { background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);color:white;border-radius:10px;padding:6px 8px;font-size:1.15rem;line-height:1;cursor:pointer; }
+    .copy-btn:hover { background:rgba(255,255,255,.22); }
+    .copy-btn:focus-visible { outline:2px solid white;outline-offset:1px; }
+    .copy-btn.is-copied { background:rgba(40,190,110,.35);border-color:rgba(120,230,160,.6); }
+    .copy-btn.is-failed { background:rgba(220,53,69,.4);border-color:rgba(255,140,150,.6); }
+    .copy-toast { position:absolute;left:50%;bottom:12%;transform:translate(-50%,6px);z-index:2;background:rgba(10,15,25,.82);color:white;font-size:.78rem;font-weight:600;padding:5px 11px;border-radius:999px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s; }
+    .copy-toast.show { opacity:1;transform:translate(-50%,0); }
+    .small-label { color:var(--muted);font-size:.76rem;text-transform:uppercase;letter-spacing:.07em; }
+    @media(max-width:575px){
+      .container.shell{padding-left:12px;padding-right:12px}
+      #cardsGrid{--bs-gutter-x:12px;--bs-gutter-y:14px}
+      .wallet-card{min-height:0;aspect-ratio:1.48/1;padding:10px 9px;border-radius:13px;display:flex;align-items:stretch}
+      .wallet-card .fw-semibold{font-size:clamp(8px,2.8vw,11px);line-height:1.15;overflow-wrap:anywhere}
+      .wallet-card .small{font-size:clamp(7px,2.3vw,9px)!important;line-height:1.15}
+      .wallet-card .card-number{font-size:clamp(8px,2.55vw,10px);letter-spacing:.015em;margin:0!important}
+      .wallet-card .muted-light{font-size:clamp(6px,1.9vw,8px);letter-spacing:.035em}
+      .cvv-box{gap:2px;padding:1px 1px 1px 5px;border-radius:7px}
+      .cvv-box .muted-light{display:none}
+      .cvv-value{font-size:clamp(7px,2.3vw,9px);letter-spacing:.06em;min-width:3ch}
+      .cvv-toggle{padding:3px 4px;font-size:clamp(9px,2.8vw,12px)}
+      .card-content{column-gap:5px;row-gap:3px}
+      .number-row{gap:4px}
+      .copy-btn{padding:3px 4px;border-radius:7px;font-size:clamp(11px,3.4vw,14px)}
+      .copy-toast{font-size:clamp(8px,2.6vw,10px);padding:3px 8px;bottom:8%}
+      .pin-card{padding:26px 22px}
+      .page-title{font-size:1.35rem}
+    }
+  </style>
+</head>
+<body>
+  <main id="walletScreen">
+    <header class="topbar py-3">
+      <div class="container shell d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-3">
+          <div class="brand-mark"><i class="bi bi-wallet2 fs-4"></i></div>
+          <div><div class="fw-bold">My Cards</div><div class="small text-white-50">Personal card dashboard</div></div>
+        </div>
+        <button id="hideAllBtn" class="btn btn-outline-light btn-sm"><i class="bi bi-eye-slash me-1"></i> Hide CVVs</button>
+      </div>
+    </header>
+
+    <div class="container shell py-4 py-lg-5">
+    
+      <div id="cardsGrid" class="row g-4"></div>
+    </div>
+  </main>
+
+  <div id="copyStatus" class="visually-hidden" aria-live="polite"></div>
+
+  <div class="modal fade" id="cvvPinModal" tabindex="-1" aria-labelledby="cvvPinTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:360px">
+      <div class="modal-content border-0 rounded-4">
+        <form id="cvvPinForm" class="p-4" novalidate>
+          <div class="text-center mb-3">
+            <div class="brand-mark mx-auto mb-3 text-white"><i class="bi bi-shield-lock fs-5"></i></div>
+            <h2 id="cvvPinTitle" class="h5 fw-bold mb-1">Enter PIN to view CVV</h2>
+            <p id="cvvPinCard" class="small text-secondary mb-0"></p>
+          </div>
+          <label for="cvvPinInput" class="visually-hidden">6-digit PIN</label>
+          <input id="cvvPinInput" class="form-control pin-dot mb-2" type="password" inputmode="numeric" maxlength="6" placeholder="••••••" autocomplete="off">
+          <div id="cvvPinError" class="text-danger small text-center mb-2" role="alert"></div>
+          <button type="button" class="btn btn-light w-100" data-bs-dismiss="modal">Cancel</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const demoCards = [
+	{ name:"PNB Platinum", network:"RuPay", holder:"ARVIND MAURYA", number:"6528580102093862", last4:"3862", cvv:"292", month:"03", year:"2030", theme:"crimson" },
+	{ name:"Axis Bank MY ZONE", network:"VISA", holder:"NIRMALA MAURYA", number:"4514570073677513", last4:"8390", cvv:"839", month:"06", year:"2028", theme:"rose" },
+      { name:"Amazon Pay ICICI Bank", network:"Visa", holder:"ARVIND MAURYA", number:"4526018159086533", last4:"6533", cvv:"418", month:"10", year:"2029", theme:"sunset" },
+      { name:"HDFC Bank Regalia", network:"Visa", holder:"ARVIND MAURYA", number:"4301661318601842", last4:"1842", cvv:"702", month:"04", year:"2028", theme:"royal" },
+      { name:"SBI SimplyCLICK", network:"Mastercard", holder:"ARVIND MAURYA", number:"5913909960309271", last4:"9271", cvv:"356", month:"12", year:"2029", theme:"emerald" },
+      { name:"ICICI Coral", network:"Mastercard", holder:"ARVIND MAURYA", number:"5199351819095419", last4:"5419", cvv:"147", month:"03", year:"2028", theme:"plum" },
+      { name:"Kotak League Platinum", network:"RuPay", holder:"ARVIND MAURYA", number:"6378657975437724", last4:"7724", cvv:"583", month:"09", year:"2029", theme:"teal" },
+      { name:"IDFC FIRST Select", network:"Visa", holder:"ARVIND MAURYA", number:"4231948757492156", last4:"2156", cvv:"264", month:"01", year:"2031", theme:"bronze" },
+      
+      { name:"AU Bank LIT", network:"Visa", holder:"ARVIND MAURYA", number:"4895559797114607", last4:"4607", cvv:"615", month:"11", year:"2030", theme:"olive" },
+      { name:"YES Bank Reserv", network:"Mastercard", holder:"ARVIND MAURYA", number:"5471049746501185", last4:"1185", cvv:"490", month:"02", year:"2029", theme:"indigo" }
+    ];
+
+    const CVV_AUTO_HIDE_MS = 10000;
+    const cvvTimers = new WeakMap();
+
+    function setCvvVisible(box, visible) {
+      const value = box.querySelector(".cvv-value");
+      const btn = box.querySelector(".cvv-toggle");
+      const icon = btn.querySelector("i");
+      clearTimeout(cvvTimers.get(box));
+      value.textContent = visible ? value.dataset.cvv : "•••";
+      btn.setAttribute("aria-pressed", String(visible));
+      btn.setAttribute("aria-label", btn.getAttribute("aria-label").replace(visible ? "Show" : "Hide", visible ? "Hide" : "Show"));
+      icon.className = visible ? "bi bi-eye-slash" : "bi bi-eye";
+      if (visible) cvvTimers.set(box, setTimeout(() => setCvvVisible(box, false), CVV_AUTO_HIDE_MS));
+    }
+
+    function hideAllCvvs() {
+      document.querySelectorAll(".cvv-box").forEach(box => setCvvVisible(box, false));
+    }
+
+    document.getElementById("cardsGrid").addEventListener("click", (event) => {
+      const box = event.target.closest(".cvv-box");
+      if (!box) return;
+      const btn = box.querySelector(".cvv-toggle");
+      if (btn.getAttribute("aria-pressed") === "true") setCvvVisible(box, false);
+      else askPinFor(box);
+    });
+
+    // ---- Copy details ----
+    // CVV is included only when it is currently shown on that card.
+    function cardDetailsText(card, includeCvv) {
+      const lines = [
+        `${card.name} (${card.network})`,
+        `Card number: ${formatNumber(card.number)}`,
+        `Cardholder: ${card.holder}`,
+        `Expires: ${card.month}/${card.year}`
+      ];
+      if (includeCvv) lines.push(`CVV: ${card.cvv}`);
+      return lines.join("\n");
+    }
+
+    async function copyText(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch {
+        // Fallback for browsers that block the Clipboard API (e.g. some file:// pages)
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.setAttribute("readonly", "");
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        let ok = false;
+        try { ok = document.execCommand("copy"); } catch { ok = false; }
+        ta.remove();
+        return ok;
+      }
+    }
+
+    const copyResetTimers = new WeakMap();
+
+    document.getElementById("cardsGrid").addEventListener("click", async (event) => {
+      const btn = event.target.closest(".copy-btn");
+      if (!btn) return;
+      const card = demoCards[btn.dataset.index];
+      const cardEl = btn.closest(".wallet-card");
+      const box = cardEl.querySelector(".cvv-box");
+      const toast = cardEl.querySelector(".copy-toast");
+      const cvvShown = box.querySelector(".cvv-toggle").getAttribute("aria-pressed") === "true";
+      const ok = await copyText(cardDetailsText(card, cvvShown));
+
+      const icon = btn.querySelector("i");
+      const message = ok ? (cvvShown ? "Copied with CVV" : "Copied (no CVV)") : "Copy failed";
+      clearTimeout(copyResetTimers.get(btn));
+      btn.classList.remove("is-copied", "is-failed");
+      btn.classList.add(ok ? "is-copied" : "is-failed");
+      icon.className = ok ? "bi bi-check2" : "bi bi-x-lg";
+      toast.textContent = message;
+      toast.classList.add("show");
+      document.getElementById("copyStatus").textContent = `${card.name}: ${message}`;
+      copyResetTimers.set(btn, setTimeout(() => {
+        btn.classList.remove("is-copied", "is-failed");
+        icon.className = "bi bi-copy";
+        toast.classList.remove("show");
+      }, 2000));
+    });
+
+    document.getElementById("hideAllBtn").addEventListener("click", hideAllCvvs);
+
+    // CVV PIN = the expiry year written backwards, then the month.
+    // Example: expires 06/2031 -> "2031" backwards is "1302", then "06" -> PIN 130206
+    function cvvPinFor(card) {
+      return card.year.split("").reverse().join("") + card.month;
+    }
+
+    const pinModalEl = document.getElementById("cvvPinModal");
+    const pinModal = new bootstrap.Modal(pinModalEl);
+    const pinInput = document.getElementById("cvvPinInput");
+    const pinError = document.getElementById("cvvPinError");
+    let pendingBox = null;
+
+    function askPinFor(box) {
+      pendingBox = box;
+      const card = demoCards[box.dataset.index];
+      document.getElementById("cvvPinCard").textContent = `${card.name} •••• ${card.last4}`;
+      pinInput.value = "";
+      pinError.textContent = "";
+      pinInput.classList.remove("is-wrong");
+      pinModal.show();
+    }
+
+    function checkPin() {
+      if (!pendingBox) return;
+      const card = demoCards[pendingBox.dataset.index];
+      if (pinInput.value === cvvPinFor(card)) {
+        setCvvVisible(pendingBox, true);
+        pinModal.hide();
+      } else {
+        pinError.textContent = "Incorrect PIN. Please try again.";
+        pinInput.classList.remove("is-wrong");
+        void pinInput.offsetWidth; // restart the shake animation
+        pinInput.classList.add("is-wrong");
+        pinInput.value = "";
+        pinInput.focus();
+      }
+    }
+
+    // Digits only; check automatically when the 6th digit is typed
+    pinInput.addEventListener("input", () => {
+      pinInput.value = pinInput.value.replace(/\D/g, "").slice(0, 6);
+      if (pinInput.value.length > 0) pinInput.classList.remove("is-wrong");
+      if (pinInput.value.length === 6) checkPin();
+    });
+
+    document.getElementById("cvvPinForm").addEventListener("submit", (event) => {
+      event.preventDefault();
+      if (pinInput.value.length === 6) checkPin();
+      else pinError.textContent = "Enter all 6 digits.";
+    });
+
+    pinModalEl.addEventListener("shown.bs.modal", () => pinInput.focus());
+    pinModalEl.addEventListener("hidden.bs.modal", () => {
+      const btn = pendingBox && pendingBox.querySelector(".cvv-toggle");
+      pendingBox = null;
+      pinInput.value = "";
+      if (btn) btn.focus();
+    });
+
+    document.addEventListener("visibilitychange", () => { if (document.hidden) hideAllCvvs(); });
+
+    function formatNumber(num) {
+      return num.replace(/(\d{4})(?=\d)/g, "$1 ");
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    function renderCards() {
+      const grid = document.getElementById("cardsGrid");
+      grid.innerHTML = demoCards.map((c, i) => `
+        <div class="col-6 col-sm-12 col-md-6 col-xl-4">
+          <div class="wallet-card ${c.theme} p${(i % 5) + 1}">
+            <div class="card-content">
+              <div class="card-title-block">
+                <div class="fw-semibold">${escapeHtml(c.name)}</div>
+                <div class="small text-white-50">${escapeHtml(c.network)}</div>
+              </div>
+              <div class="cvv-box" data-index="${i}">
+                <span class="muted-light">CVV</span>
+                <span class="cvv-value" data-cvv="${escapeHtml(c.cvv)}" aria-live="polite">•••</span>
+                <button type="button" class="cvv-toggle" aria-pressed="false" aria-label="Show CVV for ${escapeHtml(c.name)}"><i class="bi bi-eye"></i></button>
+              </div>
+              <div class="number-row">
+                <div class="card-number">${escapeHtml(formatNumber(c.number))}</div>
+                <button type="button" class="copy-btn" data-index="${i}" aria-label="Copy details of ${escapeHtml(c.name)}" title="Copy details"><i class="bi bi-copy"></i></button>
+              </div>
+              <div class="card-holder"><div class="small fw-semibold text-uppercase">${escapeHtml(c.holder)}</div></div>
+              <div class="card-expiry text-end"><div class="muted-light">Expires</div><div class="small fw-semibold">${escapeHtml(c.month)}/${escapeHtml(c.year)}</div></div>
+            </div>
+            <div class="copy-toast" aria-hidden="true"></div>
+          </div>
+        </div>`).join("");
+    }
+
+    renderCards();
+  </script>
+</body>
+</html>
