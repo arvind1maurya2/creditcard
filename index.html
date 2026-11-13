@@ -534,7 +534,7 @@
         await navigator.clipboard.writeText(text);
         return true;
       } catch {
-        // Fallback for browsers that block the Clipboard API (e.g. some file:// pages)
+  
         const ta = document.createElement("textarea");
         ta.value = text;
         ta.setAttribute("readonly", "");
