@@ -176,15 +176,6 @@
 
         <!-- Step 2: card details -->
         <form id="addStepForm" class="modal-body px-4 pb-4 d-none" novalidate>
-          <div id="convertBox" class="alert alert-info small d-none">
-            <div id="convertText" class="mb-2"></div>
-            <button id="convertBtn" type="button" class="btn btn-sm btn-dark">Convert old cards</button>
-            <div id="convertOut" class="d-none mt-2">
-              <p class="mb-1">Replace everything inside <code>ENCRYPTED_CARDS = [ … ]</code> with:</p>
-              <textarea id="convertLines" class="form-control font-monospace small mb-2" rows="5" readonly></textarea>
-              <button id="copyConvertBtn" type="button" class="btn btn-sm btn-outline-dark"><i class="bi bi-copy me-1"></i> Copy all lines</button>
-            </div>
-          </div>
           <div class="row g-2">
             <div class="col-12"><label class="form-label small fw-semibold mb-1" for="fName">Card name</label><input id="fName" class="form-control" placeholder="e.g. HDFC Millennia"></div>
             <div class="col-6"><label class="form-label small fw-semibold mb-1" for="fNetwork">Network</label>
@@ -194,6 +185,9 @@
             <div class="col-4"><label class="form-label small fw-semibold mb-1" for="fCvv">CVV</label><input id="fCvv" class="form-control" type="password" inputmode="numeric" maxlength="4" autocomplete="off"></div>
             <div class="col-4"><label class="form-label small fw-semibold mb-1" for="fMonth">Month</label><input id="fMonth" class="form-control" inputmode="numeric" maxlength="2" placeholder="MM"></div>
             <div class="col-4"><label class="form-label small fw-semibold mb-1" for="fYear">Year</label><input id="fYear" class="form-control" inputmode="numeric" maxlength="4" placeholder="YYYY"></div>
+            <div class="col-6"><label class="form-label small fw-semibold mb-1" for="fPin">PIN to view CVV</label><input id="fPin" class="form-control" type="password" inputmode="numeric" maxlength="12" autocomplete="new-password" placeholder="6–12 digits"></div>
+            <div class="col-6"><label class="form-label small fw-semibold mb-1" for="fPin2">Confirm PIN</label><input id="fPin2" class="form-control" type="password" inputmode="numeric" maxlength="12" autocomplete="new-password"></div>
+            <div class="col-12"><div id="fPinHelp" class="form-text mt-0">You'll type this PIN to see this card's CVV. It can't be recovered if forgotten.</div></div>
             <div class="col-12">
               <div class="form-label small fw-semibold mb-1" id="fColorLabel">Colour</div>
               <div id="fColors" class="color-picks" role="radiogroup" aria-labelledby="fColorLabel"></div>
@@ -210,8 +204,8 @@
           <button id="copyLineBtn" type="button" class="btn btn-dark w-100 mb-3"><i class="bi bi-copy me-1"></i> Copy line</button>
           <p class="small text-secondary mb-1">To keep this card, open <code>index.html</code>, find <code>ENCRYPTED_CARDS</code> and paste the line in quotes with a comma:</p>
           <pre class="small bg-body-tertiary rounded-3 p-2 mb-3" style="white-space:pre-wrap">const ENCRYPTED_CARDS = [
-  "c4.…first card…",
-  "c4.…new card…",
+  "c5.…first card…",
+  "c5.…new card…",
 ];</pre>
           <button id="addAnotherBtn" type="button" class="btn btn-outline-secondary w-100">Add another card</button>
         </div>
@@ -229,7 +223,7 @@
             <p id="cvvPinCard" class="small text-secondary mb-0"></p>
           </div>
           <label for="cvvPinInput" class="visually-hidden">6-digit PIN</label>
-          <input id="cvvPinInput" class="form-control pin-dot mb-2" type="password" inputmode="numeric" maxlength="6" placeholder="••••••" autocomplete="off">
+          <input id="cvvPinInput" class="form-control pin-dot mb-2" type="password" inputmode="numeric" maxlength="12" placeholder="••••••" autocomplete="off">
           <div id="cvvPinError" class="text-danger small text-center mb-2" role="alert"></div>
           <button type="button" class="btn btn-light w-100" data-bs-dismiss="modal">Cancel</button>
         </form>
@@ -239,20 +233,18 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-  
+   
     const ENCRYPTED_CARDS = [
-     
-"c3.eyJuYW1lIjoiS290YWsgSW5kaWFuT2lsIiwibmV0d29yayI6IlJ1UGF5IiwiaG9sZGVyIjoiQVJWSU5EIE1BVVJZQSIsIm51bWJlciI6IjM1NjE0NjE4ODEzODgwMzYiLCJtb250aCI6IjA5IiwieWVhciI6IjIwMjgiLCJ0aGVtZSI6ImNvcmFsIn0=.KLcUc3Ol+229weo3.yCgmb3cKNNQV/4Pc4mpKvrpfgA==.XXn+i583ejF7mVUu.lYBMArZ4MIHZk/0SSJ3QGW+t",
-"c3.eyJuYW1lIjoiUE5CIFBsYXRpbnVtIiwibmV0d29yayI6IlJ1UGF5IiwiaG9sZGVyIjoiQVJWSU5EIE1BVVJZQSIsIm51bWJlciI6IjY1Mjg1ODAxMDIwOTM4NjIiLCJtb250aCI6IjAzIiwieWVhciI6IjIwMzAiLCJ0aGVtZSI6IndpbmUifQ==.hP7Hg//FitVbaHWp.84yfA70gF8y2v2wOIi07SMovww==.XnZ+P55SOo7mftvq.ffzrTKBv/k38fwWwq1kNgcy7",
-"c3.eyJuYW1lIjoiQVhJUyBNeSBab25lIiwibmV0d29yayI6IlZpc2EiLCJob2xkZXIiOiJBUlZJTkQgTUFVUllBIiwibnVtYmVyIjoiNDUxNDU3MDA3MzY3NzUxMyIsIm1vbnRoIjoiMTEiLCJ5ZWFyIjoiMjAyOSIsInRoZW1lIjoibWFnZW50YSJ9.AVNAyl3hctcOpuuH.8o4oOifqfGET5qlOs1RN1vlmYg==.DNVVjG3as/bqESnZ.n1lbC2RIRV50tMkS3G40nhuy",
-"c3.eyJuYW1lIjoiU0JJIFNpbXBseVNhdmUiLCJuZXR3b3JrIjoiUnVQYXkiLCJob2xkZXIiOiJBUlZJTkQgTUFVUllBIiwibnVtYmVyIjoiNjUyOTAyOTg5NDUxMjYzOSIsIm1vbnRoIjoiMTAiLCJ5ZWFyIjoiMjAzMCIsInRoZW1lIjoicm95YWwifQ==.6+2L7iFrVrNS63Sb.0tzxxoi31qxyM/IfPXEaFJc3Kg==.ZRsPRD2hMVQWZplR.awbguQz+lGwrxbSq6xUNaHpJ",
-"c3.eyJuYW1lIjoiSUNJQ0kgQW1hem9uIFBheSIsIm5ldHdvcmsiOiJWaXNhIiwiaG9sZGVyIjoiQVJWSU5EIE1BVVJZQSIsIm51bWJlciI6IjQzMTU4MTI2MTA1NzEwMTAiLCJtb250aCI6IjA0IiwieWVhciI6IjIwMzIiLCJ0aGVtZSI6ImNoYXJjb2FsIn0=.XH+C8yBWcaoFhVeL.0HmBwKL726qIeVDz8alZ8IxCew==.xSnw/JKaMhmLgHJg.W/Vrm9ZvNrqqvlD5/fsp09dd",
-"c3.eyJuYW1lIjoiQmFuayBvZiBCYXJvZGEgRWFzeSIsIm5ldHdvcmsiOiJSdVBheSIsImhvbGRlciI6IkFSVklORCBNQVVSWUEiLCJudW1iZXIiOiIzNTYxMzIzMjE3MzcyOTEyIiwibW9udGgiOiIwNSIsInllYXIiOiIyMDI4IiwidGhlbWUiOiJza3kifQ==.+EVkLwWoD4JwXlMN.fMubedjCHlfx8W5F2btK2r1JOg==.50K114i4xfMT4zKV.0Rf+uCJWXudRhQF+lLaln4UU",
-"c3.eyJuYW1lIjoiSERGQyBNaWxsZW5uaWEiLCJuZXR3b3JrIjoiVmlzYSIsImhvbGRlciI6IkFSVklORCBNQVVSWUEiLCJudW1iZXIiOiI0MzQxNTUwMjA3OTc1MjU1IiwibW9udGgiOiIwMyIsInllYXIiOiIyMDMyIiwidGhlbWUiOiJvY2VhbiJ9.a7SMEh5szir4oMT/.VkmCCTmcJ//3jDie5P1KAGZqBQ==.YdqmBQX7BzM2GjTB.LYdkBBaJVZoPGra+hCx20vmf",
-"c3.eyJuYW1lIjoiQVhJUyBGTElQS0FSVCIsIm5ldHdvcmsiOiJNYXN0ZXJjYXJkIiwiaG9sZGVyIjoiQVJWSU5EIE1BVVJZQSIsIm51bWJlciI6IjUzMzQ2NzAwMzE2OTI1MzIiLCJtb250aCI6IjA1IiwieWVhciI6IjIwMjgiLCJ0aGVtZSI6InJvc2UifQ==.Vv26Ji0QsGixHv28.DRcbdo+46pXaZg2eRmQuf+QX6A==.7Xf0C98Xex7IoZOj.nt6KmS2/7uuBJZrPTziG+QfO"
-	
+"c5.eyJuYW1lIjoiS290YWsgSW5kaWFuT2lsIiwibmV0d29yayI6IlJ1UGF5IiwiaG9sZGVyIjoiQVJWSU5EIE1BVVJZQSIsIm51bWJlciI6IjM1NjE0NjE4ODEzODgwMzYiLCJtb250aCI6IjA5IiwieWVhciI6IjIwMjgiLCJ0aGVtZSI6InN1bnNldCIsInBpbkxlbiI6Nn0=.ipKLODmtQ9kFBjNm9fpOOw==.n4WUNGGWRXlKy65r.ktJlvAA8xh7wcaisLhhr67nFXg==.RSrm9ZhzTruwiwHo.GgUjs9BGdJPoTHi8SAJ0BMSO",
+"c5.eyJuYW1lIjoiUE5CIFBsYXRpbnVtIiwibmV0d29yayI6IlJ1UGF5IiwiaG9sZGVyIjoiQVJWSU5EIE1BVVJZQSIsIm51bWJlciI6IjY1Mjg1ODAxMDIwOTM4NjIiLCJtb250aCI6IjAzIiwieWVhciI6IjIwMzAiLCJ0aGVtZSI6InJ1YnkiLCJwaW5MZW4iOjZ9.+f3eNbdtjeet/hRjTb4Imw==.L2xbPh011yuB/XNe.8N96txGDeq8cNBc1vbce6XTgjA==.Aib0Z913pIhHuL/f.Xtm1cCM+9WuupfGk+9EpFKKo",
+"c5.eyJuYW1lIjoiQVhJUyBNeSBab25lIiwibmV0d29yayI6IlZpc2EiLCJob2xkZXIiOiJBUlZJTkQgTUFVUllBIiwibnVtYmVyIjoiNDUxNDU3MDA3MzY3NzUxMyIsIm1vbnRoIjoiMTEiLCJ5ZWFyIjoiMjAyOSIsInRoZW1lIjoicm9zZSIsInBpbkxlbiI6Nn0=.0FQq7dp/904e4lDCHnnv3w==.v3J3k1762uPyvE0I.L+gSEa3xZtFHFoSY5imrNBo6cQ==.nb9HNRt7kIuhOSLG.xqUrcAo+5tI/49zbrhRrAMVi",
+"c5.eyJuYW1lIjoiQVhJUyBGTElQS0FSVCIsIm5ldHdvcmsiOiJNYXN0ZXJjYXJkIiwiaG9sZGVyIjoiQVJWSU5EIE1BVVJZQSIsIm51bWJlciI6IjUzMzQ2NzAwMzE2OTI1MzIiLCJtb250aCI6IjA1IiwieWVhciI6IjIwMjgiLCJ0aGVtZSI6ImNvcmFsIiwicGluTGVuIjo2fQ==.D0llhr1ATks1NzqqUT71DQ==.XvzwtjGQ2loCLDfZ.sRQSGzYFAKOvKfFknIkasuWrdg==.Pnrypv/aUBuRZu2U.Hzo8XJe+X9NlZtUf3tcgFNz9",
+"c5.eyJuYW1lIjoiU0JJIFNpbXBseVNhdmUiLCJuZXR3b3JrIjoiUnVQYXkiLCJob2xkZXIiOiJBUlZJTkQgTUFVUllBIiwibnVtYmVyIjoiNjUyOTAyOTg5NDUxMjYzOSIsIm1vbnRoIjoiMTAiLCJ5ZWFyIjoiMjAzMCIsInRoZW1lIjoicm95YWwiLCJwaW5MZW4iOjZ9.O9H8VIyyegeskaOmCK7ryg==.i6itiswNkFo7DIyn.vu8kKJRnsT8fqQs4U3YP4gFtEQ==.VylKt60VG1cF7cHC.KCZ1BQA0Gzs0fIbmZyKG+e1f",
+"c5.eyJuYW1lIjoiSUNJQ0kgQW1hem9uIFBheSIsIm5ldHdvcmsiOiJWaXNhIiwiaG9sZGVyIjoiQVJWSU5EIE1BVVJZQSIsIm51bWJlciI6IjQzMTU4MTI2MTA1NzEwMTAiLCJtb250aCI6IjA0IiwieWVhciI6IjIwMzIiLCJ0aGVtZSI6ImNoYXJjb2FsIiwicGluTGVuIjo2fQ==.67f0OdRvRqieyn1GjB5igw==.W/PKWi0eedq2kK2T.n3RRsObQ5f/EOG2UZALKQrb7rA==.myKBKVRfElPR6xGU.LELFhC7VCMfc/8PdKi6TZNHX",
+"c5.eyJuYW1lIjoiQmFuayBvZiBCYXJvZGEgRWFzeSIsIm5ldHdvcmsiOiJSdVBheSIsImhvbGRlciI6IkFSVklORCBNQVVSWUEiLCJudW1iZXIiOiIzNTYxMzIzMjE3MzcyOTEyIiwibW9udGgiOiIwNSIsInllYXIiOiIyMDI4IiwidGhlbWUiOiJvY2VhbiIsInBpbkxlbiI6Nn0=.xeqIgDOFNv4A32Xx0tG1Ig==.YWWJ8pM/8yV5um5Q.6foHyxGD5w2IVaI4umBALXPSbw==.9O10sf+2wIJdJh38.db5eoz39G/nzbiJfjqYk0sWv",
+"c5.eyJuYW1lIjoiSERGQyBNaWxsZW5uaWEiLCJuZXR3b3JrIjoiVmlzYSIsImhvbGRlciI6IkFSVklORCBNQVVSWUEiLCJudW1iZXIiOiI0MzQxNTUwMjA3OTc1MjU1IiwibW9udGgiOiIwMyIsInllYXIiOiIyMDMyIiwidGhlbWUiOiJ0ZWFsIiwicGluTGVuIjo2fQ==.KPMpoYfmvyUDojCMRqnaTg==.fPcJ7OK67zViuxeR.TpVgf7GBKW3rvqxAOUXKHpnjQA==.7FiDpFaSc+JYtcb7.96Xdz7UGZjb1HIu/7LEj1bO4"
     ];
-
+ 
     let cards = [];
     const APP_SALT = "zuOIPuybB2wnbYCD5bu0tA==";
     const ITERATIONS = 600000;
@@ -268,22 +260,23 @@
       for (const b of bytes) s += String.fromCharCode(b);
       return btoa(s);
     }
-    async function deriveKey(password) {
+    async function deriveKey(password, salt = b64ToBytes(APP_SALT)) {
       const baseKey = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveKey"]);
       return crypto.subtle.deriveKey(
-        { name: "PBKDF2", salt: b64ToBytes(APP_SALT), iterations: ITERATIONS, hash: "SHA-256" },
+        { name: "PBKDF2", salt, iterations: ITERATIONS, hash: "SHA-256" },
         baseKey, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
     }
-  
-    function cvvPinFor(card) {
+ 
+    function legacyPinFor(card) {
+      if (card.fmt === "c3") return card.year + card.month;
       const n = String(card.number).replace(/\D/g, "");
       return n.slice(-8, -4) + n.slice(-2);
     }
-    
     const pinKeyCache = new Map();
-    function pinKey(pin) {
-      if (!pinKeyCache.has(pin)) pinKeyCache.set(pin, deriveKey(pin));
-      return pinKeyCache.get(pin);
+    function pinKey(pin, saltB64) {
+      const id = (saltB64 || "") + "|" + pin;
+      if (!pinKeyCache.has(id)) pinKeyCache.set(id, saltB64 ? deriveKey(pin, b64ToBytes(saltB64)) : deriveKey(pin));
+      return pinKeyCache.get(id);
     }
     async function aesEncrypt(text, key) {
       const iv = crypto.getRandomValues(new Uint8Array(12));
@@ -294,23 +287,23 @@
       const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64ToBytes(iv) }, key, b64ToBytes(data));
       return new TextDecoder().decode(plain);
     }
-    async function encryptCard(card, masterKey) {
-      const { cvv, ...details } = card;
-      const cvvPart = await aesEncrypt(cvv, await pinKey(cvvPinFor(card)));
+    async function encryptCard(card, pin, masterKey) {
+      const { cvv, ...rest } = card;
+      const details = { ...rest, pinLen: pin.length };
+      const salt = bytesToB64(crypto.getRandomValues(new Uint8Array(16)));
+      const cvvPart = await aesEncrypt(cvv, await pinKey(pin, salt));
       const checkPart = await aesEncrypt("ok", masterKey);
-      return `c4.${bytesToB64(new TextEncoder().encode(JSON.stringify(details)))}.${cvvPart}.${checkPart}`;
+      return `c5.${bytesToB64(new TextEncoder().encode(JSON.stringify(details)))}.${salt}.${cvvPart}.${checkPart}`;
     }
     function parseCardLine(line) {
       const p = String(line).trim().split(".");
       const details = () => JSON.parse(new TextDecoder().decode(b64ToBytes(p[1])));
+      if (p[0] === "c5" && p.length === 7) return { ...details(), fmt: "c5", salt: p[2], cvvIv: p[3], cvvData: p[4], chkIv: p[5], chkData: p[6] };
       if ((p[0] === "c4" || p[0] === "c3") && p.length === 6) return { ...details(), fmt: p[0], cvvIv: p[2], cvvData: p[3], chkIv: p[4], chkData: p[5] };
-      if (p[0] === "c2" && p.length === 4) return { ...details(), fmt: "c2", cvvIv: p[2], cvvData: p[3] };
       throw new Error("format");
     }
     async function masterKeyOpens(card, key) {
-      if (card.fmt === "c4" || card.fmt === "c3") return (await aesDecrypt(card.chkIv, card.chkData, key)) === "ok";
-      await aesDecrypt(card.cvvIv, card.cvvData, key);
-      return true;
+      return (await aesDecrypt(card.chkIv, card.chkData, key)) === "ok";
     }
     function cardLines() {
       return ENCRYPTED_CARDS.flatMap(x => String(x).split(",")).map(x => x.trim()).filter(Boolean);
@@ -326,10 +319,10 @@
       const note = document.getElementById("decryptNote");
       note.textContent = bad ? `${bad} card line${bad > 1 ? "s" : ""} couldn't be read (copied incompletely, or made with an older version — add ${bad > 1 ? "them" : "it"} again).` : "";
       note.classList.toggle("d-none", !bad);
-      const old = cards.filter(c => c.fmt === "c2").length;
+      const old = cards.filter(c => c.fmt !== "c5").length;
       if (old) {
         note.textContent = (note.textContent ? note.textContent + " " : "") +
-          `${old} card${old > 1 ? "s use" : " uses"} the previous format. Tap Add card, enter your password, then "Convert old cards" to get new lines.`;
+          `${old} card${old > 1 ? "s still use" : " still uses"} the old automatic CVV PIN. Add ${old > 1 ? "them" : "it"} again to set your own PIN, then remove the old line${old > 1 ? "s" : ""}.`;
         note.classList.remove("d-none");
       }
       document.getElementById("emptyState").classList.toggle("d-none", cards.length > 0);
@@ -356,6 +349,13 @@
       setTimeout(() => focusEl.focus(), 50);
     }
 
+    function pinProblem(pin, card) {
+      if (!/^\d{6,12}$/.test(pin)) return "PIN must be 6 to 12 digits.";
+      if (/^(\d)\1+$/.test(pin)) return "PIN can't be the same digit repeated.";
+      if ("01234567890123".includes(pin) || "98765432109876".includes(pin)) return "PIN can't be a simple sequence like 123456.";
+      return "";
+    }
+
     function passwordProblem(pw) {
       if (pw.length < 8) return "Use at least 8 characters.";
       if (!/[A-Za-z]/.test(pw) || !/\d/.test(pw)) return "Use both letters and numbers, not just a PIN.";
@@ -372,7 +372,7 @@
     colorBox.addEventListener("click", (e) => { const b = e.target.closest(".color-pick"); if (b) pickTheme(b.dataset.theme); });
 
     function resetAddForm() {
-      ["fName", "fHolder", "fNumber", "fCvv", "fMonth", "fYear"].forEach(id => { const el = document.getElementById(id); el.value = ""; el.classList.remove("is-invalid"); });
+      ["fName", "fHolder", "fNumber", "fCvv", "fMonth", "fYear", "fPin", "fPin2"].forEach(id => { const el = document.getElementById(id); el.value = ""; el.classList.remove("is-invalid"); });
       document.getElementById("fNetwork").value = "Visa";
       document.getElementById("addFormError").textContent = "";
       const names = Object.keys(THEMES);
@@ -419,10 +419,6 @@
         }
         addKey = key;
         addPw.value = addPw2.value = "";
-        const old = cards.filter(c => c.fmt === "c2").length;
-        document.getElementById("convertBox").classList.toggle("d-none", !old);
-        document.getElementById("convertOut").classList.add("d-none");
-        document.getElementById("convertText").textContent = `${old} of your cards ${old > 1 ? "use" : "uses"} the previous format, so ${old > 1 ? "their CVV PIN won't" : "its CVV PIN won't"} work. Convert to new lines:`;
         showAddStep("addStepForm");
       } catch {
         addPwError.textContent = "Wrong password. Please try again.";
@@ -442,17 +438,27 @@
         number: v("fNumber").replace(/[\s-]/g, ""), cvv: v("fCvv"),
         month: v("fMonth").padStart(2, "0"), year: v("fYear"), theme: selectedTheme
       };
+      const pin = v("fPin"), pin2 = v("fPin2");
       const checks = { fName: !!card.name, fHolder: !!card.holder, fNumber: /^\d{14,19}$/.test(card.number),
         fCvv: /^\d{3,4}$/.test(card.cvv), fMonth: /^(0[1-9]|1[0-2])$/.test(card.month), fYear: /^20\d{2}$/.test(card.year) };
+      const pinMsg = pinProblem(pin, card);
+      checks.fPin = !pinMsg;
+      checks.fPin2 = !pinMsg && pin === pin2;
       Object.entries(checks).forEach(([id, ok]) => document.getElementById(id).classList.toggle("is-invalid", !ok));
       const firstBad = Object.keys(checks).find(id => !checks[id]);
       if (firstBad) {
-        document.getElementById("addFormError").textContent = "Please check the highlighted fields.";
+        document.getElementById("addFormError").textContent =
+          firstBad === "fPin" ? pinMsg : firstBad === "fPin2" ? "The two PINs don't match." : "Please check the highlighted fields.";
         return document.getElementById(firstBad).focus();
       }
-      const line = await encryptCard(card, addKey);
-      const back = parseCardLine(line);
-      if ((await aesDecrypt(back.cvvIv, back.cvvData, await pinKey(cvvPinFor(card)))) !== card.cvv) throw new Error("self-check");
+      const btn = document.getElementById("addFormBtn");
+      btn.disabled = true;
+      let line;
+      try {
+        line = await encryptCard(card, pin, addKey);
+        const back = parseCardLine(line);
+        if ((await aesDecrypt(back.cvvIv, back.cvvData, await pinKey(pin, back.salt))) !== card.cvv) throw new Error("self-check");
+      } finally { btn.disabled = false; }
       document.getElementById("resultName").textContent = card.name;
       document.getElementById("resultLine").value = line;
       resetAddForm();
@@ -465,30 +471,6 @@
       catch { document.getElementById("resultLine").select(); document.execCommand("copy"); }
       btn.innerHTML = '<i class="bi bi-check2 me-1"></i> Copied';
       setTimeout(() => { btn.innerHTML = '<i class="bi bi-copy me-1"></i> Copy line'; }, 2000);
-    });
-    document.getElementById("convertBtn").addEventListener("click", async (e) => {
-      const btn = e.currentTarget;
-      btn.disabled = true; btn.textContent = "Converting…";
-      try {
-        const out = [];
-        for (const c of cards) {
-          const { fmt, cvvIv, cvvData, chkIv, chkData, cvv: _shown, ...details } = c;
-          if (fmt === "c2") {
-            const cvv = await aesDecrypt(cvvIv, cvvData, addKey);
-            out.push(await encryptCard({ ...details, cvv }, addKey));
-          } else {
-            out.push(`${fmt}.${bytesToB64(new TextEncoder().encode(JSON.stringify(details)))}.${cvvIv}.${cvvData}.${chkIv}.${chkData}`);
-          }
-        }
-        document.getElementById("convertLines").value = out.map(l => `      "${l}",`).join("\n");
-        document.getElementById("convertOut").classList.remove("d-none");
-      } catch {
-        document.getElementById("convertText").textContent = "Some old cards were made with a different password and couldn't be converted.";
-      } finally { btn.disabled = false; btn.textContent = "Convert old cards"; }
-    });
-    document.getElementById("copyConvertBtn").addEventListener("click", async () => {
-      const t = document.getElementById("convertLines").value;
-      try { await navigator.clipboard.writeText(t); } catch { document.getElementById("convertLines").select(); document.execCommand("copy"); }
     });
 
     document.getElementById("addAnotherBtn").addEventListener("click", () => showAddStep("addStepForm"));
@@ -595,25 +577,24 @@
       pinInput.value = "";
       pinError.textContent = "";
       pinInput.classList.remove("is-wrong");
+      const len = pinLenOf(card);
+      pinInput.maxLength = len;
+      pinInput.placeholder = "•".repeat(len);
       pinModal.show();
     }
 
+    const pinLenOf = card => card.fmt === "c5" ? card.pinLen : 6;
     async function checkPin() {
       if (!pendingBox) return;
       const box = pendingBox, card = cards[box.dataset.index], pin = pinInput.value;
-      if (card.fmt === "c2") {
-        pinError.textContent = "This card uses the previous format. Convert it with Add card first.";
-        pinInput.value = "";
-        return;
-      }
       pinInput.disabled = true;
       pinError.textContent = "";
       try {
-        if (card.fmt === "c3") {
-          if (pin !== cvvPinFor(card)) throw new Error("wrong");
-          card.cvv = await aesDecrypt(card.cvvIv, card.cvvData, await pinKey(card.year + card.month));
+        if (card.fmt === "c5") {
+          card.cvv = await aesDecrypt(card.cvvIv, card.cvvData, await pinKey(pin, card.salt));
         } else {
-          card.cvv = await aesDecrypt(card.cvvIv, card.cvvData, await pinKey(pin));
+          if (pin !== legacyPinFor(card)) throw new Error("wrong");
+          card.cvv = await aesDecrypt(card.cvvIv, card.cvvData, await pinKey(card.fmt === "c3" ? card.year + card.month : pin));
         }
         pinInput.value = "";
         setCvvVisible(box, true);
@@ -631,14 +612,16 @@
     }
 
     pinInput.addEventListener("input", () => {
-      pinInput.value = pinInput.value.replace(/\D/g, "").slice(0, 6);
+      const len = pendingBox ? pinLenOf(cards[pendingBox.dataset.index]) : 6;
+      pinInput.value = pinInput.value.replace(/\D/g, "").slice(0, len);
       if (pinInput.value.length > 0) pinInput.classList.remove("is-wrong");
-      if (pinInput.value.length === 6) checkPin();
+      if (pinInput.value.length === len) checkPin();
     });
     document.getElementById("cvvPinForm").addEventListener("submit", (event) => {
       event.preventDefault();
-      if (pinInput.value.length === 6) checkPin();
-      else pinError.textContent = "Enter all 6 digits.";
+      const len = pendingBox ? pinLenOf(cards[pendingBox.dataset.index]) : 6;
+      if (pinInput.value.length === len) checkPin();
+      else pinError.textContent = `Enter all ${len} digits.`;
     });
 
     pinModalEl.addEventListener("shown.bs.modal", () => pinInput.focus());
